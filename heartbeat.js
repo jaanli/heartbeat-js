@@ -22,6 +22,7 @@ export class Heartbeat {
     this.targetFps = targetFps;
     this.windowSize = windowSize;
     this.rppgInterval = rppgInterval;
+    this.bpmHistory = [];
   }
   // Start the video stream
   async startStreaming() {
@@ -299,10 +300,18 @@ export class Heartbeat {
         this.drawFrequency(signal, low, high, bandMask);
         // Identify feasible frequency with maximum magnitude
         let result = cv.minMaxLoc(signal, bandMask);
-        bandMask.delete();
+
         // Infer BPM
         let bpm = result.maxLoc.y * fps / signal.rows * SEC_PER_MIN;
         console.log(bpm);
+        this.bpmHistory.push(bpm);
+        if (this.bpmHistory.length > 10) this.bpmHistory.shift();
+        let rmssd = this.calculateRMSSD(this.bpmHistory);
+        console.log(`BPM: ${bpm.toFixed(1)}, HRV RMSSD: ${rmssd.toFixed(2)}`);
+  
+        this.drawBPM(bpm);
+  
+        bandMask.delete();  
         // Draw BPM
         this.drawBPM(bpm);
       }
@@ -311,6 +320,18 @@ export class Heartbeat {
       console.log("signal too small");
     }
   }
+
+  calculateRMSSD(bpmArray) {
+    if (bpmArray.length < 2) return 0;
+    let squaredDiffs = [];
+    for (let i = 1; i < bpmArray.length; i++) {
+      let diff = (60000 / bpmArray[i]) - (60000 / bpmArray[i-1]);
+      squaredDiffs.push(diff * diff);
+    }
+    let mean = squaredDiffs.reduce((a, b) => a + b, 0) / squaredDiffs.length;
+    return Math.sqrt(mean);
+  }
+  
   // Calculate fps from timestamps
   getFps(timestamps, timeBase=1000) {
     if (Array.isArray(timestamps) && timestamps.length) {
