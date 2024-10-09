@@ -29,3 +29,13 @@ License
 ----
 
 GPL-3.0
+
+## Instructions
+
+Install node, then install `http-server`, then run:
+
+```
+http-server
+```
+
+And open `http://localhost:8080/` in your browser.
