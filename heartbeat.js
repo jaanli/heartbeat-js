@@ -331,7 +331,7 @@ export class Heartbeat {
     let mean = squaredDiffs.reduce((a, b) => a + b, 0) / squaredDiffs.length;
     return Math.sqrt(mean);
   }
-  
+
   // Calculate fps from timestamps
   getFps(timestamps, timeBase=1000) {
     if (Array.isArray(timestamps) && timestamps.length) {
@@ -492,9 +492,21 @@ export class Heartbeat {
   }
   // Draw bpm string to overlayMask
   drawBPM(bpm) {
+    let rmssdText = `RMSSD: ${rmssd.toFixed(2)}`;
     cv.putText(this.overlayMask, bpm.toFixed(0).toString(),
       new cv.Point(this.face.x, this.face.y - 10),
       cv.FONT_HERSHEY_PLAIN, 1.5, [255, 0, 0, 255], 2);
+    
+        // Draw RMSSD
+      cv.putText(
+          this.overlayMask,
+          rmssdText,
+          new cv.Point(this.face.x, this.face.y - 10),  // Just above the face box
+          cv.FONT_HERSHEY_PLAIN,
+          1.2,
+          [0, 255, 0, 255],  // Green color for RMSSD
+          2
+        );
   }
   // Clean up resources
   stop() {
